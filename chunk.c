@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "chunk.h"
 #include "memory.h"
+#include "int_conversion.h"
 
 void initChunk(Chunk* chunk) {
     chunk->count = 0;
@@ -20,7 +21,7 @@ void freeChunk(Chunk* chunk) {
     initChunk(chunk);
 }
 
-void writeChunk(Chunk* chunk, uint8_t byte, int line) {
+void writeChunk(Chunk* chunk, uint8_t data, int line) {
     if (chunk->capacity < chunk->count + 1) {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(oldCapacity);
@@ -28,12 +29,37 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
         chunk->lines = GROW_ARRAY(int, chunk->lines, oldCapacity, chunk->capacity);
     }
 
-    chunk->code[chunk->count] = byte;
+    chunk->code[chunk->count] = data;
     chunk->lines[chunk->count] = line;
     chunk->count++;
 }
 
-int addConstant(Chunk* chunk, Value value) {
+static int addConstantToPool(Chunk* chunk, Value value) {
     writeValueArray(&chunk->constants, value);
     return chunk->constants.count - 1;
+}
+
+static void writeLongConstant(Chunk* chunk, Value value, int line) {
+    writeChunk(chunk, OP_CONSTANT_LONG, line);
+    int constantIndex = addConstantToPool(chunk, value);
+    uint8_t splitIndex[3] = {};
+    splitInt32(constantIndex, splitIndex);
+    for (int i = 0; i < 3; i++) {
+        writeChunk(chunk, splitIndex[i], line);
+    }
+}
+
+static void writeShortConstant(Chunk* chunk, Value value, int line) {
+    writeChunk(chunk, OP_CONSTANT, line);
+    int constantIndex = addConstantToPool(chunk, value);
+    writeChunk(chunk, constantIndex, line);
+}
+
+void writeConstant(Chunk* chunk, Value value, int line) {
+    if (chunk->constants.count >= 256) {
+        writeLongConstant(chunk, value, line);
+    }
+    else {
+        writeShortConstant(chunk, value, line);
+    }
 }
