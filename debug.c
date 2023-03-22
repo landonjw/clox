@@ -36,15 +36,22 @@ static int longConstantInstruction(const char* name, Chunk* chunk, int offset) {
     return offset + 4;
 }
 
-int disassembleInstruction(Chunk* chunk, int offset) {
-    printf("%04d ", offset);
-    if (offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1]) {
+static void printLineNumber(Chunk* chunk, int offset) {
+    int lineNumber = getLine(&chunk->lineTracker, offset);
+    if (lineNumber == -1) {
+        printf("   ? ");
+    }
+    else if (offset > 0 && lineNumber == getLine(&chunk->lineTracker, offset - 1)) {
         printf("   | ");
     }
     else {
-        printf("%4d ", chunk->lines[offset]);
+        printf("%4d ", getLine(&chunk->lineTracker, offset));
     }
+}
 
+int disassembleInstruction(Chunk* chunk, int offset) {
+    printf("%04d ", offset);
+    printLineNumber(chunk, offset);
     uint8_t instruction = chunk->code[offset];
     switch (instruction) {
         case OP_RETURN:

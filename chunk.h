@@ -7,6 +7,7 @@
 
 #include "common.h"
 #include "value.h"
+#include "line_tracker.h"
 
 typedef enum {
     OP_CONSTANT,
@@ -18,8 +19,8 @@ typedef struct {
     int count;
     int capacity;
     uint8_t* code;
-    int* lines;
     ValueArray constants;
+    LineTracker lineTracker;
 } Chunk;
 
 void initChunk(Chunk* chunk);
