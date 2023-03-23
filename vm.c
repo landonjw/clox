@@ -19,38 +19,51 @@ void initVM() {
     resetStack();
 }
 
+static Value readShortConstant(uint8_t byte) {
+    return vm.chunk->constants.values[byte];
+}
+
+static Value readLongConstant(uint8_t byte1, uint8_t byte2, uint8_t byte3) {
+    uint8_t bytes[3] = { byte1, byte2, byte3 };
+    uint32_t index = buildInt32(bytes);
+    return vm.chunk->constants.values[index];
+}
+
 static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
+        printf("          ");
+        for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+            printf("[ ");
+            printValue(*slot);
+            printf(" ]");
+        }
+        printf("\n");
         disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
 #endif
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_CONSTANT_LONG: {
-                uint8_t indexBytes[3] = { READ_BYTE(), READ_BYTE(), READ_BYTE() };
-                uint32_t index = buildInt32(indexBytes);
-                Value constant = vm.chunk->constants.values[index];
-                printValue(constant);
-                printf("\n");
+                Value constant = readLongConstant(READ_BYTE(), READ_BYTE(), READ_BYTE());
+                push(constant);
                 break;
             }
             case OP_CONSTANT: {
-                Value constant = READ_CONSTANT();
-                printValue(constant);
-                printf("\n");
+                Value constant = readShortConstant(READ_BYTE());
+                push(constant);
                 break;
             }
             case OP_RETURN: {
+                printValue(pop());
+                printf("\n");
                 return INTERPRET_OK;
             }
         }
     }
 
 #undef READ_BYTE
-#undef READ_CONSTANT
 }
 
 InterpretResult interpret(Chunk* chunk) {

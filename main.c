@@ -6,16 +6,17 @@
 
 int main(int argc, const char* argv[]) {
     initVM();
+
     Chunk chunk;
     initChunk(&chunk);
 
-    for (int i = 0; i < 500; i++) {
-        writeConstant(&chunk, i * 2, 123);
-    }
+    writeConstant(&chunk, 1, 1);
+    writeConstant(&chunk, 2, 1);
+    writeChunk(&chunk, OP_RETURN, 2);
 
-    writeChunk(&chunk, OP_RETURN, 123);
     disassembleChunk(&chunk, "test chunk");
     interpret(&chunk);
+
     freeVM();
     freeChunk(&chunk);
     return 0;
