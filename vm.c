@@ -31,6 +31,12 @@ static Value readLongConstant(uint8_t byte1, uint8_t byte2, uint8_t byte3) {
 
 static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
+#define BINARY_OP(op) \
+    do { \
+      double b = pop(); \
+      double a = pop(); \
+      push(a op b); \
+    } while (false)
 
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
@@ -55,10 +61,11 @@ static InterpretResult run() {
                 push(constant);
                 break;
             }
-            case OP_NEGATE: {
-                push(-pop());
-                break;
-            }
+            case OP_ADD: BINARY_OP(+); break;
+            case OP_SUBTRACT: BINARY_OP(-); break;
+            case OP_MULTIPLY: BINARY_OP(*); break;
+            case OP_DIVIDE: BINARY_OP(/); break;
+            case OP_NEGATE: push(-pop()); break;
             case OP_RETURN: {
                 printValue(pop());
                 printf("\n");
@@ -68,6 +75,7 @@ static InterpretResult run() {
     }
 
 #undef READ_BYTE
+#undef BINARY_OP
 }
 
 InterpretResult interpret(Chunk* chunk) {
