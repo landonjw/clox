@@ -45,14 +45,18 @@ static InterpretResult run() {
 #endif
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
+            case OP_CONSTANT: {
+                Value constant = readShortConstant(READ_BYTE());
+                push(constant);
+                break;
+            }
             case OP_CONSTANT_LONG: {
                 Value constant = readLongConstant(READ_BYTE(), READ_BYTE(), READ_BYTE());
                 push(constant);
                 break;
             }
-            case OP_CONSTANT: {
-                Value constant = readShortConstant(READ_BYTE());
-                push(constant);
+            case OP_NEGATE: {
+                push(-pop());
                 break;
             }
             case OP_RETURN: {
