@@ -11,8 +11,12 @@
 
 VM vm;
 
-void initVM() {
+static void resetStack() {
+    vm.stackTop = vm.stack;
+}
 
+void initVM() {
+    resetStack();
 }
 
 static InterpretResult run() {
@@ -57,4 +61,14 @@ InterpretResult interpret(Chunk* chunk) {
 
 void freeVM() {
 
+}
+
+void push(Value value) {
+    *vm.stackTop = value;
+    vm.stackTop++;
+}
+
+Value pop() {
+    vm.stackTop--;
+    return *vm.stackTop;
 }
