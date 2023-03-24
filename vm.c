@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "vm.h"
 #include "int_conversion.h"
+#include "compiler.h"
 
 VM vm;
 
@@ -78,10 +79,9 @@ static InterpretResult run() {
 #undef BINARY_OP
 }
 
-InterpretResult interpret(Chunk* chunk) {
-    vm.chunk = chunk;
-    vm.ip = vm.chunk->code;
-    return run();
+InterpretResult interpret(const char* source) {
+    compile(source);
+    return INTERPRET_OK;
 }
 
 void freeVM() {
