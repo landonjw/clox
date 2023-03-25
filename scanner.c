@@ -19,20 +19,6 @@ void initScanner(const char* source) {
     scanner.start = source;
     scanner.current = source;
     scanner.line = 1;
-    int line = 1;
-    for (;;) {
-        Token token = scanToken();
-        if (token.line != line) {
-            printf("%4d", token.line);
-            line = token.line;
-        }
-        else {
-            printf("   | ");
-        }
-        printf("%2d '%.*s'\n", token.type, token.length, token.start);
-
-        if (token.type == TOKEN_EOF) break;
-    }
 }
 
 static bool isAtEnd() {
@@ -91,6 +77,10 @@ static void skipWhitespace() {
                 if (peekNext() == '/') {
                     while (peek() != '\n' && !isAtEnd()) advance();
                 }
+            case '\n':
+                scanner.line++;
+                advance();
+                break;
             default:
                 return;
         }
@@ -181,7 +171,7 @@ Token scanToken() {
     skipWhitespace();
     scanner.start = scanner.current;
 
-    if (!isAtEnd()) return makeToken(TOKEN_EOF);
+    if (isAtEnd()) return makeToken(TOKEN_EOF);
 
     char c = advance();
 
